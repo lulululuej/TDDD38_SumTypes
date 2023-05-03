@@ -4,14 +4,14 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <type_traits>
+#include <new>
 
 // base case of variant_helper
 template<typename... Types>
-struct Variant_Helper
-{
-    static constexpr std::size_t size = 0;
-};
+struct Variant_Helper;
 
+// specialization
 template<typename Type, typename... Types>
 struct Variant_Helper<Type, Types...>
 {
@@ -19,7 +19,43 @@ struct Variant_Helper<Type, Types...>
     void size_largest() {
         std::cout << size << std::endl;
     }
+
+    template<typename T, int N = 0>
+    static constexpr int index_of() {
+        if(std::is_same<T, Type>::value) {
+            std::cout << N << std::endl;
+            return N;
+        }
+        else {
+            return Variant_Helper<Types...>::template index_of<T, N+1>();
+        }
+    }
 };
+
+// specialization
+template <>
+struct Variant_Helper<>
+{
+    static constexpr std::size_t size {0};
+    // static constexpr int type {-1};
+
+    template<typename T, int N = 0>
+    static constexpr int index_of()
+    {
+        return -1;
+    }
+
+    static void destroy(char*, int)
+    {
+        throw std::bad_cast{};
+    }
+};
+
+//?
+template<typename T>
+T& asObj(char* memory) { // originally stored as char takes 1 byte;
+    return *std::launder(reinterpret_cast<T*>(memory)); // now reinterpret to T takes diff number of bytes;
+}
 
 /* Variant */
 template<typename... Types>
@@ -30,28 +66,35 @@ class Variant
         int type {-1};
     
     public:
-        //? use for normalization
+        //? why use for normalization
+        /* 
+            This parameter must be taken as a forwarding reference 
+            as to make sure that it works in the general case (some constructors might expect reference of different types)
+            It also ensures that parameter passing is as efficient as possible.
+        */
+        /*  Remove any references and any potential const qualifiers */
         template<typename T, typename NormalizedType = std::remove_cv_t<std::remove_reference_t<T>>>
         Variant(T&& data)
-            : type {}
+            : type { Variant_Helper<Types...>::template index_of<NormalizedType>() }
         {
             //? new()
+            /* use placement new to initialize an object of type NormalizedType inside memory */
             new(&memory[0]) NormalizedType { std::forward<T>(data) };
         }
 
-        /*template <typename T, typename NormalizedType = std::remove_cv_t<std::remove_reference_t<T>>>
-        Variant(T&& value)
-            // Note: Helper is a dependent name (it depends on Types...) so the compiler will
-            // assume that index_of is *not* a template. To fix this we have to add the template
-            // keyword before index_of just to communicate to the compiler that it actually is
-            // a template (See seminar 6 for details).
-            : type { Helper::template index_of<NormalizedType>() }
-        {
-            new (&memory[0]) NormalizedType { std::forward<T>(value) };
-        }*/
-
         void size_largest() {
             std::cout << sizeof(memory) << std::endl;
+        }
+        template<typename T, typename NormalizedType = std::remove_cv_t<std::remove_reference_t<T>>>
+        T& get() {
+            int comingType {Variant_Helper<Types...>::template index_of<NormalizedType>()}; 
+            if(type == comingType) {
+                std::cout << &memory[0] << std::endl;
+                return asObj<T>(&memory[0]);
+            }
+            else {
+                throw std::bad_cast{};
+            }
         }
 };
 

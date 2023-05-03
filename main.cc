@@ -5,6 +5,7 @@
 int main()
 {
     Variant<int, std::string> v { 5 };
+    
     /*
     try
     {
