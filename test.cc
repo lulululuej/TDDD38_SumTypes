@@ -11,9 +11,9 @@ int main() {
 
     Variant<int, std::string> v { 5 };
     v.get_data();*/
-    std::string str {"Hello world"};
+    /*std::string str {"Hello world"};
     Variant<int, std::string> v { str };
-    std::cout << v.get<std::string>() << std::endl;
+    std::cout << v.get<std::string>() << std::endl;*/
     //std::string str { "Hello World" };
     //v = str;
 
@@ -24,4 +24,15 @@ int main() {
         std::cout << &p << std::endl; // the addr of p
         std::cout << *p << std::endl; // the value of x
     */
+
+    int* p_int = new int(5);
+    std::cout << p_int << std::endl;
+
+    int* p_arr = new int[5];
+    std::cout << p_arr << std::endl;
+
+    delete p_int;
+    delete[] p_arr;
+    
+    return 0;
 }

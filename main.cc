@@ -4,9 +4,9 @@
 
 int main()
 {
-    Variant<int, std::string> v { 5 };
+    Variant<int, std::string, double> v { 5 };
     
-    /*
+    
     try
     {
         v.get<std::string>();
@@ -18,25 +18,23 @@ int main()
     }
     
     assert( v.get<int>() == 5 );
-
+   
     std::string str { "Hello World" };
     v = str;
-
+    
     assert( v.get<std::string>() == str );
-
+    
     v.get<std::string>().push_back('!');
-
+    
     assert( v.get<std::string>() == "Hello World!" );
-
+    
     v = 0;
-
+    
     assert( v.get<int>() == 0 );
-
     assert( v.get<int>()++ == 0 );
     assert( ++v.get<int>() == 2 );
-
+    
     v = str;
 
     assert( v.get<std::string>() == str );
-    */
 }
